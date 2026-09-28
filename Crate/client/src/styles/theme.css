@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  /* Base palette */
+  --color-onyx: #121214;
+  --color-gunmetal: #1c1d22;
+  --color-steel-line: #33353c;
+  --color-off-white: #ededef;
+  --color-smoke: #8d8f98;
+
+  /* Neon accents */
+  --color-magenta: #ff2e9a;
+  --color-cyan: #2fe3ff;
+  --color-green: #5cff7e;
+
+  /* RGB channels of the neon accents, for rgba() tints (box-shadow glows, etc.)
+     that need partial opacity — CSS custom properties can't be split into
+     channels at use-time, so these are defined once here instead of
+     hardcoding rgba(...) values with magic numbers at each call site. */
+  --color-magenta-rgb: 255, 46, 154;
+  --color-cyan-rgb: 47, 227, 255;
+  --color-green-rgb: 92, 255, 126;
+
+  /* Type */
+  --font-display: "Big Shoulders Display", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-onyx);
+  color: var(--color-off-white);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

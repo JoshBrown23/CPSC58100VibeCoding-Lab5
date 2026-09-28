@@ -1,0 +1,166 @@
+.landing {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 3rem;
+  padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem) 4rem;
+}
+
+.hero__eyebrow {
+  margin: 0 0 1rem;
+  color: var(--color-smoke);
+  font-size: 0.85rem;
+}
+
+.hero__headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.75rem, 6vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+}
+
+.hero__sub {
+  max-width: 46ch;
+  margin: 1.5rem 0 2rem;
+  color: var(--color-smoke);
+  font-size: 0.95rem;
+}
+
+.hero__button {
+  display: inline-block;
+  background-color: var(--color-magenta);
+  color: var(--color-onyx);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 2px;
+  transition: filter 150ms ease;
+}
+
+.hero__button:hover {
+  filter: brightness(1.1);
+}
+
+/* Spinning vinyl disc, built from CSS only */
+.hero__art {
+  display: flex;
+  justify-content: center;
+}
+
+.disc {
+  position: relative;
+  width: clamp(200px, 26vw, 320px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle,
+    var(--color-gunmetal) 0px,
+    var(--color-gunmetal) 3px,
+    #202127 3px,
+    #202127 5px
+  );
+  box-shadow: 0 0 0 1px var(--color-steel-line);
+  animation: spin 12s linear infinite;
+}
+
+.disc__label {
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--color-magenta),
+    var(--color-cyan),
+    var(--color-green),
+    var(--color-magenta)
+  );
+}
+
+.disc__label::after {
+  content: "";
+  position: absolute;
+  inset: 42%;
+  border-radius: 50%;
+  background: var(--color-onyx);
+  box-shadow: 0 0 0 1px var(--color-steel-line);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Tracklist / features ---------- */
+
+.tracklist {
+  border-top: 1px solid var(--color-steel-line);
+}
+
+.tracklist__row {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 1.5rem;
+  padding: 1.75rem clamp(1.5rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--color-steel-line);
+}
+
+.tracklist__side {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--color-smoke);
+}
+
+.tracklist__row:nth-child(1) .tracklist__side {
+  color: var(--color-magenta);
+}
+.tracklist__row:nth-child(2) .tracklist__side {
+  color: var(--color-cyan);
+}
+.tracklist__row:nth-child(3) .tracklist__side {
+  color: var(--color-green);
+}
+
+.tracklist__text h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+}
+
+.tracklist__text p {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--color-smoke);
+  font-size: 0.9rem;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 720px) {
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .hero__art {
+    order: -1;
+  }
+
+  .tracklist__row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}

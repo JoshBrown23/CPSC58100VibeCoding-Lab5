@@ -1,0 +1,101 @@
+.search-bar {
+  position: relative;
+  max-width: 32rem;
+}
+
+.search-bar__label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--color-smoke);
+}
+
+.search-bar__input {
+  width: 100%;
+  background-color: var(--color-gunmetal);
+  border: 1px solid var(--color-steel-line);
+  border-radius: 2px;
+  color: var(--color-off-white);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.search-bar__input:focus {
+  border-color: var(--color-cyan);
+}
+
+.search-bar__results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: 1px solid var(--color-steel-line);
+  border-radius: 2px;
+  background-color: var(--color-gunmetal);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.search-bar__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--color-steel-line);
+}
+
+.search-bar__result:last-child {
+  border-bottom: none;
+}
+
+.search-bar__result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.search-bar__result-title {
+  font-size: 0.9rem;
+}
+
+.search-bar__result-meta {
+  font-size: 0.75rem;
+  color: var(--color-smoke);
+}
+
+.search-bar__add {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-green);
+  color: var(--color-green);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.search-bar__add:hover {
+  background-color: var(--color-green);
+  color: var(--color-onyx);
+}
+
+.search-bar__status {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-smoke);
+}
+
+/* Nothing to say yet: an empty <p> has no height, so only its margin needs
+   removing. Deliberately NOT display:none — that would take the live region
+   out of the accessibility tree and screen readers would miss its updates. */
+.search-bar__status:empty {
+  margin: 0;
+}
+
+.search-bar__status--error {
+  color: var(--color-magenta);
+}
