@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Album, SortDirection, SortField } from "../types";
-import { STARTER_COLLECTION } from "../data/collectionData";
+import { addAlbumToCollection, fetchCollection } from "../../../services/collectionApi";
 
 /**
  * Sorts a copy of `albums` by one field. Albums missing a value for that
@@ -33,12 +33,16 @@ function sortAlbums(
 /**
  * useCollection
  *
- * Owns the user's collection state and how it's sorted. Today this
- * lives in memory and seeds from STARTER_COLLECTION. Once the backend
- * exists, this hook is the single place that changes: `albums` comes
- * from a fetched GET /api/collection response, and addAlbum posts to
- * the API instead of updating local state directly. Nothing outside
- * this hook should need to change when that happens.
+ * Owns the user's collection state and how it's sorted. `albums` is
+ * fetched from GET /api/collection on mount, and addAlbum posts to the
+ * API rather than updating local state directly — this hook is the only
+ * place either of those happens, so nothing outside it needs to know the
+ * collection is backed by a real database rather than memory.
+ *
+ * addAlbum can reject (network failure, or a 409 if the album is already
+ * in the collection in that format) — callers are responsible for
+ * catching that and showing something to the user; this hook doesn't
+ * assume how that should be displayed.
  *
  * Sort field/direction live here rather than as page-local state
  * because they determine the actual order of `albums` returned below —
@@ -51,16 +55,43 @@ function sortAlbums(
  * data itself belongs in this hook.
  */
 export function useCollection() {
-  const [albums, setAlbums] = useState<Album[]>(STARTER_COLLECTION);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const addAlbum = (album: Album) => {
-    setAlbums((current) => {
-      const alreadyOwned = current.some((existing) => existing.id === album.id);
-      return alreadyOwned ? current : [...current, album];
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsLoading(true);
+    setLoadError(null);
+
+    fetchCollection(controller.signal)
+      .then(setAlbums)
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Couldn't load your collection."
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const addAlbum = useCallback(async (album: Album) => {
+    const saved = await addAlbumToCollection({
+      title: album.title,
+      artist: album.artist,
+      releaseYear: album.year,
+      format: album.format,
     });
-  };
+    setAlbums((current) => [...current, saved]);
+  }, []);
 
   const toggleSortDirection = () => {
     setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -74,6 +105,8 @@ export function useCollection() {
   return {
     albums: sortedAlbums,
     collectionSize: albums.length,
+    isLoading,
+    loadError,
     addAlbum,
     sortField,
     setSortField,

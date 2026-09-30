@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import SearchBar from "../../features/collection/components/SearchBar/SearchBar";
@@ -8,7 +8,7 @@ import AlbumCard from "../../features/collection/components/AlbumCard/AlbumCard"
 import AlbumListItem from "../../features/collection/components/AlbumListItem/AlbumListItem";
 import { useCollection } from "../../features/collection/hooks/useCollection";
 import { useAlbumSearch } from "../../features/collection/hooks/useAlbumSearch";
-import type { ViewMode } from "../../features/collection/types";
+import type { Album, ViewMode } from "../../features/collection/types";
 import "./CollectionPage.css";
 
 /**
@@ -24,9 +24,13 @@ import "./CollectionPage.css";
  */
 export default function CollectionPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [addAlbumError, setAddAlbumError] = useState<string | null>(null);
+
   const {
     albums,
     collectionSize,
+    isLoading,
+    loadError,
     addAlbum,
     sortField,
     setSortField,
@@ -34,9 +38,25 @@ export default function CollectionPage() {
     toggleSortDirection,
   } = useCollection();
 
-  const ownedIds = useMemo(() => albums.map((album) => album.id), [albums]);
   const { query, setQuery, results, status, errorMessage } =
-    useAlbumSearch(ownedIds);
+    useAlbumSearch(albums);
+
+  // addAlbum can reject (network failure, or a 409 if it's already in the
+  // collection in that format) — this is the one place that catches it
+  // and turns it into something visible, so SearchBar stays a component
+  // that only ever calls onAdd and never has to know it can fail.
+  const handleAdd = async (album: Album) => {
+    setAddAlbumError(null);
+    try {
+      await addAlbum(album);
+    } catch (error) {
+      setAddAlbumError(
+        error instanceof Error
+          ? error.message
+          : "Couldn't add that album. Try again."
+      );
+    }
+  };
 
   return (
     <div className="collection-page">
@@ -59,8 +79,13 @@ export default function CollectionPage() {
             results={results}
             status={status}
             errorMessage={errorMessage}
-            onAdd={addAlbum}
+            onAdd={handleAdd}
           />
+          {addAlbumError && (
+            <p className="collection-search__error" role="alert">
+              {addAlbumError}
+            </p>
+          )}
         </section>
 
         <section className="collection-list">
@@ -79,7 +104,13 @@ export default function CollectionPage() {
             </div>
           </div>
 
-          {albums.length === 0 ? (
+          {isLoading ? (
+            <p className="collection-list__status">Loading your shelf…</p>
+          ) : loadError ? (
+            <p className="collection-list__status collection-list__status--error" role="alert">
+              {loadError} Make sure the API server is running.
+            </p>
+          ) : albums.length === 0 ? (
             <p className="collection-list__empty">
               Nothing on the shelf yet — search above to add your first
               record.

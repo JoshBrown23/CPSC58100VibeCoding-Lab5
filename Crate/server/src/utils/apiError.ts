@@ -27,6 +27,14 @@ export class NotFoundError extends ApiError {
   }
 }
 
+/** The request conflicts with something that already exists (e.g. a duplicate). */
+export class ConflictError extends ApiError {
+  constructor(message = "Conflict.") {
+    super(409, message);
+    this.name = "ConflictError";
+  }
+}
+
 /** The external catalog (MusicBrainz) failed or returned something unexpected. */
 export class UpstreamServiceError extends ApiError {
   constructor(message = "Upstream service error.", statusCode = 502) {

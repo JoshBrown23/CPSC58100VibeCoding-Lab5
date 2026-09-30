@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  // Prisma 7 configures the connection URL in prisma.config.ts (for the
+  // CLI) and via a driver adapter (for the runtime client) — see
+  // src/db/prismaClient.ts. It no longer lives here.
+  provider = "postgresql"
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  username     String @unique
+  email        String @unique
+  passwordHash String @map("password_hash")
+
+  collectionEntries UserCollection[]
+
+  @@map("users")
+}
+
+model Artist {
+  id         Int    @id @default(autoincrement())
+  // @unique so findOrCreateArtist (collection.repository.ts) can safely
+  // upsert on this field — without a unique constraint, two concurrent
+  // "add to collection" requests for a brand-new artist could each find
+  // nothing and both try to create, producing duplicate rows.
+  artistName String @unique @map("artist_name")
+
+  albums Album[]
+
+  @@map("artists")
+}
+
+model Album {
+  id       Int    @id @default(autoincrement())
+  title    String
+  artistId Int    @map("artist_id")
+  artist   Artist @relation(fields: [artistId], references: [id])
+
+  // Nullable: not every search result from the catalog API has these.
+  releaseYear   Int?
+  genre         String?
+  coverImageUrl String? @map("cover_image_url")
+
+  collectionEntries UserCollection[]
+
+  // Same upsert-safety reasoning as Artist.artistName, scoped to one
+  // artist so two different artists can each have a "Greatest Hits".
+  @@unique([title, artistId], name: "title_artistId")
+  @@index([artistId])
+  @@map("albums")
+}
+
+enum MediaFormat {
+  CD
+  Vinyl
+}
+
+model UserCollection {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  albumId Int   @map("album_id")
+  album   Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  format MediaFormat
+
+  // Not in the original spec, but low-risk and useful: lets the API sort
+  // by "recently added" later without any other schema change. Drop this
+  // field if you'd rather keep the table to exactly the four requested
+  // columns.
+  addedAt DateTime @default(now()) @map("added_at")
+
+  // Prevents the same user from adding the identical album+format twice.
+  // The repository layer relies on this to turn a duplicate "add" into a
+  // clean 409 Conflict instead of a silent duplicate row.
+  @@unique([userId, albumId, format], name: "userId_albumId_format")
+  @@index([userId])
+  @@map("user_collection")
+}

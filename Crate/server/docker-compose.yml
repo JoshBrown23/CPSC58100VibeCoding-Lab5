@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crate
+      POSTGRES_PASSWORD: crate
+      POSTGRES_DB: crate
+    ports:
+      # Host:container. Change the host side (left of the colon) if
+      # something else on your machine already listens on 5432.
+      - "5432:5432"
+    volumes:
+      - crate-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  crate-postgres-data:

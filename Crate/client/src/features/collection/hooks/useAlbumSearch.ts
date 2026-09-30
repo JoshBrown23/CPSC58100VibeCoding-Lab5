@@ -7,6 +7,11 @@ import type { Album, SearchStatus } from "../types";
 // a pause in typing avoids queueing a request for every keystroke.
 const DEBOUNCE_MS = 400;
 
+/** title + artist, case-insensitive, as a single comparable key. */
+function albumKey(title: string, artist: string): string {
+  return `${title.toLowerCase()}::${artist.toLowerCase()}`;
+}
+
 /**
  * useAlbumSearch
  *
@@ -14,10 +19,16 @@ const DEBOUNCE_MS = 400;
  * debouncing, the request itself, and loading/error state. SearchBar is
  * purely presentational and just renders what this returns.
  *
- * `ownedIds` filters out albums the user already has, so they can't be
- * added twice.
+ * `ownedAlbums` filters out albums the user already has, matched by
+ * title+artist rather than id. That's a deliberate compromise: search
+ * results carry a MusicBrainz id (a UUID), while a saved collection
+ * entry's id comes from the database (an integer, stringified) — the two
+ * id spaces have no overlap, so comparing them directly would never
+ * exclude anything. Title+artist matching is looser (a retitled reissue
+ * could slip through as "new"), but it's the only signal both sides
+ * actually share given the current schema.
  */
-export function useAlbumSearch(ownedIds: string[]) {
+export function useAlbumSearch(ownedAlbums: Pick<Album, "title" | "artist">[]) {
   const [query, setQuery] = useState("");
   const [rawResults, setRawResults] = useState<Album[]>([]);
   const [requestStatus, setRequestStatus] = useState<SearchStatus>("idle");
@@ -64,9 +75,13 @@ export function useAlbumSearch(ownedIds: string[]) {
   }, [debouncedQuery]);
 
   const results = useMemo(() => {
-    const owned = new Set(ownedIds);
-    return rawResults.filter((album) => !owned.has(album.id));
-  }, [rawResults, ownedIds]);
+    const ownedKeys = new Set(
+      ownedAlbums.map((album) => albumKey(album.title, album.artist))
+    );
+    return rawResults.filter(
+      (album) => !ownedKeys.has(albumKey(album.title, album.artist))
+    );
+  }, [rawResults, ownedAlbums]);
 
   return {
     query,
