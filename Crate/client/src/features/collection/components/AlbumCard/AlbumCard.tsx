@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Album } from "../../types";
 import { formatYear } from "../../utils/formatYear";
 import "./AlbumCard.css";
@@ -23,12 +24,30 @@ const SLEEVE_CLASS_BY_FORMAT: Record<Album["format"], string> = {
  * to be displayed (grid view, search results, detail page later).
  */
 export default function AlbumCard({ album }: AlbumCardProps) {
+  const [coverFailed, setCoverFailed] = useState(false);
+
+  useEffect(() => {
+    setCoverFailed(false);
+  }, [album.coverImageUrl]);
+
+  const coverImageUrl = album.coverImageUrl;
+  const showCover = coverImageUrl !== null && !coverFailed;
+
   return (
     <article className="album-card">
-      <div
-        className={`album-card__sleeve ${SLEEVE_CLASS_BY_FORMAT[album.format]}`}
-        aria-hidden="true"
-      />
+      {showCover ? (
+        <img
+          className="album-card__cover"
+          src={coverImageUrl}
+          alt=""
+          onError={() => setCoverFailed(true)}
+        />
+      ) : (
+        <div
+          className={`album-card__sleeve ${SLEEVE_CLASS_BY_FORMAT[album.format]}`}
+          aria-hidden="true"
+        />
+      )}
       <div className="album-card__body">
         <span className="album-card__format">{album.format}</span>
         {/* h2: the page's only h1 is CollectionPage's "Your Shelf" heading,
@@ -36,6 +55,7 @@ export default function AlbumCard({ album }: AlbumCardProps) {
         <h2 className="album-card__title">{album.title}</h2>
         <p className="album-card__meta">
           {album.artist} · {formatYear(album.year)}
+          {album.genre ? ` · ${album.genre}` : ""}
         </p>
       </div>
     </article>

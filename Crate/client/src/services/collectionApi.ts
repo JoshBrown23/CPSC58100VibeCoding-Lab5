@@ -1,4 +1,4 @@
-import type { Album } from "../features/collection/types";
+import type { AddAlbumBody, Album } from "../features/collection/types";
 import { apiDelete, apiGet, apiPost } from "./apiClient";
 
 // Matches GET/POST /api/collection — see server/src/api/collection.
@@ -17,15 +17,8 @@ export function fetchCollection(signal?: AbortSignal): Promise<Album[]> {
   );
 }
 
-export interface AddAlbumRequest {
-  title: string;
-  artist: string;
-  releaseYear: number | null;
-  format: Album["format"];
-}
-
 export async function addAlbumToCollection(
-  album: AddAlbumRequest
+  album: AddAlbumBody
 ): Promise<Album> {
   const response = await apiPost<CollectionEntryResponse>(
     "/collection",

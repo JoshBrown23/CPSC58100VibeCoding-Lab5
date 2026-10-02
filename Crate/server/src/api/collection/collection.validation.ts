@@ -1,20 +1,18 @@
 import type { Request } from "express";
+import { MEDIA_FORMATS, type AddAlbumBody } from "../../../../shared/album";
 import { BadRequestError } from "../../utils/apiError";
-
-const VALID_FORMATS = ["CD", "Vinyl"] as const;
-type ValidFormat = (typeof VALID_FORMATS)[number];
 
 const MAX_TITLE_ARTIST_LENGTH = 300;
 const MAX_GENRE_LENGTH = 100;
 const MAX_URL_LENGTH = 2048;
 
-export interface AddToCollectionBody {
-  title: string;
-  artist: string;
-  releaseYear: number | null;
-  genre: string | null;
-  coverImageUrl: string | null;
-  format: ValidFormat;
+export type AddToCollectionBody = AddAlbumBody;
+
+function isMediaFormat(value: unknown): value is AddAlbumBody["format"] {
+  return (
+    typeof value === "string" &&
+    (MEDIA_FORMATS as readonly string[]).includes(value)
+  );
 }
 
 function requireNonEmptyString(
@@ -57,7 +55,7 @@ function parseOptionalYear(value: unknown): number | null {
   if (value === undefined || value === null || value === "") return null;
   const year = typeof value === "number" ? value : Number(value);
   if (!Number.isInteger(year) || year < 1000 || year > 9999) {
-    throw new BadRequestError('"releaseYear" must be a 4-digit year.');
+    throw new BadRequestError('"year" must be a 4-digit year.');
   }
   return year;
 }
@@ -70,14 +68,14 @@ export function parseAddToCollectionBody(req: Request): AddToCollectionBody {
   >;
 
   const format = record.format;
-  if (format !== "CD" && format !== "Vinyl") {
+  if (!isMediaFormat(format)) {
     throw new BadRequestError('"format" must be either "CD" or "Vinyl".');
   }
 
   return {
     title: requireNonEmptyString(record.title, "title", MAX_TITLE_ARTIST_LENGTH),
     artist: requireNonEmptyString(record.artist, "artist", MAX_TITLE_ARTIST_LENGTH),
-    releaseYear: parseOptionalYear(record.releaseYear),
+    year: parseOptionalYear(record.year),
     genre: parseOptionalString(record.genre, "genre", MAX_GENRE_LENGTH),
     coverImageUrl: parseOptionalString(
       record.coverImageUrl,

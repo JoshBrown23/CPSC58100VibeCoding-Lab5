@@ -87,8 +87,10 @@ export function useCollection() {
     const saved = await addAlbumToCollection({
       title: album.title,
       artist: album.artist,
-      releaseYear: album.year,
+      year: album.year,
       format: album.format,
+      genre: album.genre,
+      coverImageUrl: album.coverImageUrl,
     });
     setAlbums((current) => [...current, saved]);
   }, []);

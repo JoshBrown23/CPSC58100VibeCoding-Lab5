@@ -1,13 +1,8 @@
-export type MediaFormat = "Vinyl" | "CD";
-
-export interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  // null when the catalog has no release date for this pressing.
-  year: number | null;
-  format: MediaFormat;
-}
+export type {
+  Album,
+  AddAlbumBody,
+  MediaFormat,
+} from "../../../../shared/album";
 
 export type SortField = "title" | "artist" | "year" | "format";
 export type SortDirection = "asc" | "desc";

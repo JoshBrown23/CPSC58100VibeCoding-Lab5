@@ -9,7 +9,14 @@
   background: linear-gradient(135deg, var(--color-gunmetal), var(--color-onyx));
 }
 
-/* Placeholder cover art until image support exists — tinted by
+.album-card__cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Placeholder cover art when no image URL is stored — tinted by
    format so the two media types stay visually distinct in a grid. */
 .album-card__sleeve--vinyl {
   box-shadow: inset 0 0 40px rgba(var(--color-magenta-rgb), 0.12);

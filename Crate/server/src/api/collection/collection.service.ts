@@ -1,4 +1,4 @@
-import type { MediaFormat } from "../../../generated/prisma/client";
+import type { Album } from "../../../../shared/album";
 import {
   addToCollection,
   findCollectionByUser,
@@ -8,27 +8,13 @@ import {
 import type { AddToCollectionBody } from "./collection.validation";
 import { NotFoundError } from "../../utils/apiError";
 
-// Matches the client's existing Album type (client/src/features/collection/types.ts)
-// so the frontend needs no special-casing between search results and
-// persisted collection entries.
-export interface CollectionEntryResponse {
-  id: string;
-  title: string;
-  artist: string;
-  year: number | null;
-  format: MediaFormat;
-  genre: string | null;
-  coverImageUrl: string | null;
-}
-
-function toResponse(entry: CollectionEntryWithAlbum): CollectionEntryResponse {
+function toResponse(entry: CollectionEntryWithAlbum): Album {
   return {
-    // Stringified so this lines up with the client's Album.id: string,
-    // which also holds MusicBrainz IDs (UUIDs) for search results. The
-    // two id spaces are different shapes (numeric here, UUID there) and
-    // are never compared to each other directly — see the note in
-    // useAlbumSearch.ts about why "already owned" matching uses title+
-    // artist instead of id.
+    // Stringified so this lines up with Album.id, which also holds
+    // MusicBrainz IDs (UUIDs) for search results. The two id spaces are
+    // different shapes (numeric here, UUID there) and are never compared
+    // to each other directly — see the note in useAlbumSearch.ts about
+    // why "already owned" matching uses title+artist instead of id.
     id: String(entry.id),
     title: entry.album.title,
     artist: entry.album.artist.artistName,
@@ -39,9 +25,7 @@ function toResponse(entry: CollectionEntryWithAlbum): CollectionEntryResponse {
   };
 }
 
-export async function getCollection(
-  userId: number
-): Promise<CollectionEntryResponse[]> {
+export async function getCollection(userId: number): Promise<Album[]> {
   const rows = await findCollectionByUser(userId);
   return rows.map(toResponse);
 }
@@ -49,13 +33,13 @@ export async function getCollection(
 export async function addAlbumToCollection(
   userId: number,
   body: AddToCollectionBody
-): Promise<CollectionEntryResponse> {
+): Promise<Album> {
   const entry = await addToCollection(
     userId,
     {
       title: body.title,
       artistName: body.artist,
-      releaseYear: body.releaseYear,
+      releaseYear: body.year,
       genre: body.genre,
       coverImageUrl: body.coverImageUrl,
     },

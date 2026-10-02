@@ -1,3 +1,4 @@
+import type { Album } from "../../../../shared/album";
 import { config } from "../../config/env";
 import { ApiError, UpstreamServiceError } from "../../utils/apiError";
 import { createThrottle } from "../../utils/throttle";
@@ -18,15 +19,8 @@ const musicBrainzThrottle = createThrottle({
 
 // Our app only tracks two formats — anything else MusicBrainz returns
 // (Cassette, Digital Media, SACD, ...) gets filtered out in toCatalogAlbum.
-export type CatalogFormat = "Vinyl" | "CD";
 
-export interface CatalogAlbum {
-  id: string; // MusicBrainz release ID (MBID)
-  title: string;
-  artist: string;
-  year: number | null;
-  format: CatalogFormat;
-}
+const COVER_ART_ARCHIVE_FRONT = "https://coverartarchive.org/release";
 
 interface MusicBrainzMedium {
   format?: string;
@@ -50,7 +44,7 @@ interface MusicBrainzReleaseSearchResponse {
   releases: MusicBrainzRelease[];
 }
 
-function normalizeFormat(rawFormat?: string): CatalogFormat | null {
+function normalizeFormat(rawFormat?: string): Album["format"] | null {
   if (!rawFormat) return null;
   const value = rawFormat.toLowerCase();
   if (value.includes("vinyl")) return "Vinyl";
@@ -94,7 +88,7 @@ function escapeLucenePhrase(text: string): string {
   return text.replace(/[\\"]/g, "\\$&");
 }
 
-function toCatalogAlbum(release: MusicBrainzRelease): CatalogAlbum | null {
+function toCatalogAlbum(release: MusicBrainzRelease): Album | null {
   const format = normalizeFormat(release.media?.[0]?.format);
   if (!format) return null;
 
@@ -107,6 +101,11 @@ function toCatalogAlbum(release: MusicBrainzRelease): CatalogAlbum | null {
     artist,
     year: extractYear(release.date),
     format,
+    // MusicBrainz search does not return a reliable genre field; Cover
+    // Art Archive can be derived from the release MBID without a second
+    // lookup. Missing art 404s at image-load time, not here.
+    genre: null,
+    coverImageUrl: `${COVER_ART_ARCHIVE_FRONT}/${release.id}/front`,
   };
 }
 
@@ -179,7 +178,7 @@ function musicBrainzFetch<T>(
 export async function searchAlbums(
   query: string,
   limit: number
-): Promise<CatalogAlbum[]> {
+): Promise<Album[]> {
   const phrase = escapeLucenePhrase(query);
   const data = await musicBrainzFetch<MusicBrainzReleaseSearchResponse>(
     "/release",
@@ -195,7 +194,7 @@ export async function searchAlbums(
   if (!data?.releases) return [];
 
   const seen = new Set<string>();
-  const results: CatalogAlbum[] = [];
+  const results: Album[] = [];
 
   for (const release of data.releases) {
     const album = toCatalogAlbum(release);
@@ -212,7 +211,7 @@ export async function searchAlbums(
   return results;
 }
 
-export async function getAlbumById(mbid: string): Promise<CatalogAlbum | null> {
+export async function getAlbumById(mbid: string): Promise<Album | null> {
   const release = await musicBrainzFetch<MusicBrainzRelease>(
     `/release/${mbid}`,
     { inc: "artist-credits+media" }
